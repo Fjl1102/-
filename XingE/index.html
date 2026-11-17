@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">XingE - 情绪净化与奇妙标本图鉴</title>
+    <!-- 引入 Tailwind CSS 加快界面美化 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #f1f5f9; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .shake-anim { animation: shake 0.4s ease-in-out; }
+        /* 自定义滚动条美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4">
+
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col h-[85vh] max-h-[850px]">
+        
+        <!-- 头部导航 -->
+        <div class="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md">
+            <div>
+                <h1 class="font-bold text-base sm:text-lg flex items-center gap-1.5">
+                    <span>🐊</span> <span data-i18n="app-title">XingE 的情绪净化瓶</span>
+                </h1>
+                <p class="text-xs text-slate-400" data-i18n="app-sub">学号 202323146 · 清扫者 & 好奇宝宝</p>
+            </div>
+            
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <!-- 语言切换下拉框 -->
+                <select id="lang-selector" onchange="changeLanguage(this.value)" class="bg-slate-800 text-white text-xs px-2 py-1.5 rounded-lg border border-slate-700 focus:outline-none cursor-pointer">
+                    <option value="zh">🇨🇳 中文</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="en">🇺🇸 English</option>
+                </select>
+                
+                <button onclick="toggleModal(true)" class="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1 text-white shadow">
+                    📖 <span data-i18n="dex-btn">图鉴</span>(<span id="count-badge">0</span>)
+                </button>
+            </div>
+        </div>
+
+        <!-- 主内容区：角色与交互 -->
+        <div class="flex-1 bg-slate-50/70 p-4 flex flex-col justify-between overflow-y-auto space-y-3">
+            
+            <!-- 角色设定与展示卡片 -->
+            <div id="character-card" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center transition-all duration-300 relative">
+                <!-- 设定标签 -->
+                <div class="absolute top-3 left-3 flex gap-1">
+                    <span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full font-medium" data-i18n="tag-cleaner">清扫者</span>
+                    <span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full font-medium" data-i18n="tag-curious">好奇心</span>
+                </div>
+
+                <!-- 角色头像区 (动态切换设定图/表情) -->
+                <div id="avatar-container" class="w-28 h-28 mx-auto mt-2 bg-slate-100 rounded-2xl flex items-center justify-center shadow-inner border-2 border-purple-200 overflow-hidden relative group">
+                    <img id="xinge-img" src="e7ab1872c67111289a716693b4a1173.jpg" alt="XingE" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                </div>
+
+                <!-- 状态与描述 -->
+                <h2 id="xinge-status" class="font-bold text-slate-800 mt-2.5 text-sm sm:text-base">XingE 正戴着耳机聆听中...</h2>
+                <p id="xinge-desc" class="text-xs text-slate-500 mt-1 px-2 italic">“今天岛上有什么好玩的魔法残余吗？”</p>
+            </div>
+
+            <!-- 输入与发泄区 -->
+            <div class="w-full bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
+                    <span>🪄</span> <span data-i18n="input-label">今天遇到了什么不讲道理的无理数？</span>
+                </label>
+                <textarea id="grievance-input" rows="3" class="w-full p-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none bg-slate-50/50" placeholder="例如：客户要求五彩斑斓的黑，或者地铁莫名其妙晚点..."></textarea>
+                
+                <button onclick="submitGrievance()" class="w-full mt-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 px-4 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-md">
+                    <span data-i18n="submit-btn">✨ 呼唤 XingE 开启魔法清扫！</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图鉴 Modal 弹窗 -->
+    <div id="dex-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+                <h3 class="font-bold text-sm sm:text-base flex items-center gap-2" data-i18n="modal-title">📜 魔法残余标本图鉴</h3>
+                <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white text-xs sm:text-sm" data-i18n="close-btn">✕ 关闭</button>
+            </div>
+            <div id="dex-list" class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-50">
+                <!-- 动态生成的图鉴条目将在这里显示 -->
+            </div>
+            <div class="p-3 bg-white border-t border-slate-100 text-center">
+                <button onclick="clearDex()" class="text-xs text-red-500 hover:underline font-medium" data-i18n="clear-btn">清空所有标本记录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 核心多语言与交互逻辑 -->
+    <script>
+        // 多语言词典配置
+        const translations = {
+            zh: {
+                "page-title": "XingE - 情绪净化与奇妙标本图鉴",
+                "app-title": "XingE 的情绪净化瓶",
+                "app-sub": "学号 202323146 · 清扫者 & 好奇宝宝",
+                "dex-btn": "图鉴",
+                "tag-cleaner": "清扫者",
+                "tag-curious": "好奇心",
+                "input-label": "今天遇到了什么不讲道理的无理数？",
+                "input-placeholder": "例如：客户要求五彩斑斓的黑，或者地铁莫名其妙晚点...",
+                "submit-btn": "✨ 呼唤 XingE 开启魔法清扫！",
+                "modal-title": "📜 魔法残余标本图鉴",
+                "close-btn": "✕ 关闭",
+                "clear-btn": "清空所有标本记录",
+                "default-status": "XingE 正戴着耳机聆听中...",
+                "default-desc": "“今天岛上有什么好玩的魔法残余吗？”",
+                "empty-dex": "收纳瓶空空如也~ 快去向 XingE 倾诉不讲道理的事吧！",
+                "alert-empty": "总得写点什么不讲道理的事，XingE 才能帮你抓哦！",
+                "confirm-clear": "确定要清空所有收集到的情绪标本吗？",
+                "specimen": "标本 #",
+                "comment-label": "🏷️ XingE 批注：",
+                "success-status": "【觉醒模式】气场全开中！",
+                "success-desc": "“气得单片眼镜都亮了，已全部收进收纳瓶！”",
+                comments: [
+                    "触发形态扩展！胸前星坠冒紫烟，气场全开！",
+                    "趴在地上仔细搜寻后发现：确实是非常不讲道理的残余！",
+                    "挥动星尘扫帚，把这个离谱遭遇扫得干干净净！",
+                    "XingE 戴上单片放大镜眼镜：人类的世界真奇妙又无理...",
+                    "瞳孔变成细线！进入究极清扫模式！"
+                ]
+            },
+            ko: {
+                "page-title": "XingE - 감정 정화 및 기묘한 표본 도감",
+                "app-title": "XingE의 감정 정화 병",
+                "app-sub": "학번 202323146 · 청소자 & 호기심쟁이",
+                "dex-btn": "도감",
+                "tag-cleaner": "청소자",
+                "tag-curious": "호기심",
+                "input-label": "오늘 어떤 말도 안 되는 부조리함을 겪으셨나요?",
+                "input-placeholder": "예: 고객이 형색 색의 어두운 색을 요구하거나, 지하철이 연착됨...",
+                "submit-btn": "✨ XingE를 불러 마법 청소 시작하기!",
+                "modal-title": "📜 마법 잔여물 표본 도감",
+                "close-btn": "✕ 닫기",
+                "clear-btn": "모든 표본 기록 삭제",
+                "default-status": "XingE가 헤드폰을 끼고 소리를 감지하는 중...",
+                "default-desc": "“오늘 섬에 재미있는 마법 잔여물이 있을까?”",
+                "empty-dex": "수납병이 텅 비었어요~ XingE에게 부조리한 일을 털어놓아 보세요!",
+                "alert-empty": "XingE가 잡을 수 있도록 부조리한 일을 적어주세요!",
+                "confirm-clear": "수집된 모든 감정 표본을 삭제하시겠습니까?",
+                "specimen": "표본 #",
+                "comment-label": "🏷️ XingE의 코멘트: ",
+                "success-status": "【각성 모드】 기운 폭발 & 단안경 장착!",
+                "success-desc": "“말도 안 되는 잔여물 감지! 수납병에 봉인 완료!”",
+                comments: [
+                    "형태 확장 발동! 별 펜던트에서 보라색 연기가 피어오르고 기운이 강해집니다!",
+                    "바닥에 엎드려 샅샅이 수색한 결과: 정말 구제불능의 부조리함!",
+                    "별가루 빗자루를 휘둘러 이 황당한 사건을 깨끗이 쓸어버렸습니다!",
+                    "단안경을 착용한 XingE: 인간의 세계는 정말 기묘하고 무리하군...",
+                    "눈동자가 가느다란 선으로 변화! 궁극의 청소 모드 돌입!"
+                ]
+            },
+            en: {
+                "page-title": "XingE - Emotion Purification & Specimen Dex",
+                "app-title": "XingE's Purification Jar",
+                "app-sub": "ID 202323146 · Cleaner & Curious Soul",
+                "dex-btn": "Dex",
+                "tag-cleaner": "Cleaner",
+                "tag-curious": "Curious",
+                "input-label": "What unreasonable absurdity did you encounter today?",
+                "input-placeholder": "e.g., Client wants dark colors with bright light, or subway delayed...",
+                "submit-btn": "✨ Call XingE for Magical Cleaning!",
+                "modal-title": "📜 Magic Residue Specimen Dex",
+                "close-btn": "✕ Close",
+                "clear-btn": "Clear All Specimens",
+                "default-status": "XingE is listening with headphones...",
+                "default-desc": "\"Any fun magic residue on the island today?\"",
+                "empty-dex": "The storage jar is empty~ Go vent your frustrations to XingE!",
+                "alert-empty": "Please write down something unreasonable for XingE to catch!",
+                "confirm-clear": "Are you sure you want to clear all collected emotion specimens?",
+                "specimen": "Specimen #",
+                "comment-label": "🏷️ XingE's Note: ",
+                "success-status": "[Awakening Mode] Aura Activated & Monocle On!",
+                "success-desc": "\"Absurdity detected! Sealed safely into the jar!\"",
+                comments: [
+                    "Form expansion triggered! Star pendant smoking purple smoke with intense aura!",
+                    "Searched flat on the ground and confirmed: Highly unreasonable residue!",
+                    "Waving the starlight broom to sweep away this ridiculous encounter!",
+                    "XingE puts on the monocle: The human world is truly bizarre...",
+                    "Pupils turn to thin lines! Entering ultimate cleaning mode!"
+                ]
+            }
+        };
+
+        let currentLang = 'zh';
+        let collection = JSON.parse(localStorage.getItem('xinge_dex') || '[]');
+        updateBadge();
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('lang-selector').value = lang;
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.innerText = translations[currentLang][key];
+                }
+            });
+
+            document.getElementById('grievance-input').placeholder = translations[currentLang]['input-placeholder'];
+            document.getElementById('xinge-status').innerText = translations[currentLang]['default-status'];
+            document.getElementById('xinge-desc').innerText = translations[currentLang]['default-desc'];
+
+            if (!document.getElementById('dex-modal').classList.contains('hidden')) {
+                renderDexList();
+            }
+        }
+
+        function submitGrievance() {
+            const input = document.getElementById('grievance-input');
+            const text = input.value.trim();
+            if(!text) {
+                alert(translations[currentLang]['alert-empty']);
+                return;
+            }
+
+            const card = document.getElementById('character-card');
+            const xingeImg = document.getElementById('xinge-img');
+            const statusText = document.getElementById('xinge-status');
+            const descText = document.getElementById('xinge-desc');
+
+            card.classList.add('shake-anim');
+            setTimeout(() => card.classList.remove('shake-anim'), 400);
+
+            // 切换为觉醒/搜寻形态的手绘图（使用你提供的第三张姿势图代表觉醒清扫）
+            xingeImg.src = "d01b68b9bccecb94a2fe4c74ca3e393.jpg";
+
+            const langComments = translations[currentLang].comments;
+            const randomComment = langComments[Math.floor(Math.random() * langComments.length)];
+            
+            statusText.innerText = translations[currentLang]['success-status'];
+            descText.innerText = translations[currentLang]['success-desc'];
+
+            const newSpecimen = {
+                id: Date.now(),
+                content: text,
+                comment: randomComment,
+                date: new Date().toLocaleDateString()
+            };
+
+            collection.unshift(newSpecimen);
+            localStorage.setItem('xinge_dex', JSON.stringify(collection));
+            updateBadge();
+
+            input.value = "";
+
+            // 4秒后恢复日常聆听形态
+            setTimeout(() => {
+                xingeImg.src = "e7ab1872c67111289a716693b4a1173.jpg";
+                statusText.innerText = translations[currentLang]['default-status'];
+                descText.innerText = translations[currentLang]['default-desc'];
+            }, 4000);
+        }
+
+        function updateBadge() {
+            document.getElementById('count-badge').innerText = collection.length;
+        }
+
+        function toggleModal(show) {
+            const modal = document.getElementById('dex-modal');
+            if(show) {
+                renderDexList();
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
+        }
+
+        function renderDexList() {
+            const listContainer = document.getElementById('dex-list');
+            if(collection.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-10 text-slate-400 text-sm">${translations[currentLang]['empty-dex']}</div>`;
+                return;
+            }
+
+            listContainer.innerHTML = collection.map((item, index) => `
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm text-xs sm:text-sm">
+                    <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1">
+                        <span class="font-bold text-purple-700">${translations[currentLang]['specimen']}${collection.length - index}</span>
+                        <span>${item.date}</span>
+                    </div>
+                    <p class="text-slate-800 font-medium mb-2 leading-relaxed">“${item.content}”</p>
+                    <div class="bg-purple-50 text-purple-800 text-[11px] sm:text-xs p-2 rounded-xl flex items-start gap-1.5 border border-purple-100">
+                        <span class="shrink-0">${translations[currentLang]['comment-label']}</span> 
+                        <span class="leading-snug">${item.comment}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clearDex() {
+            if(confirm(translations[currentLang]['confirm-clear'])) {
+                collection = [];
+                localStorage.removeItem('xinge_dex');
+                updateBadge();
+                renderDexList();
+            }
+        }
+    </script>
+</body>
+</html>
